@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Scanner</title>
+    <title>barcode scanner</title>
 
     <link rel="manifest" href="manifest.json">
 
     <!-- Use Open Sans font -->
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
 
-    <!-- Add Material Design styling -->
+    <!-- Add custom styling for dark theme with lighter text -->
     <style>
         body {
             font-family: 'Open Sans', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: #121212; /* Dark background */
+            color: #f4f4f4; /* Light text */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -29,62 +30,39 @@
             width: 100%;
             max-width: 400px;
             padding: 20px;
-            background-color: white;
+            background-color: #1e1e1e; /* Dark container background */
             border-radius: 8px;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         h1 {
             text-align: center;
-            font-size: 24px;
+            font-size: 20px; /* Smaller header */
             margin-bottom: 20px;
-            color: #2196F3;
-            font-weight: 600;
-        }
-
-        .section {
-            margin-bottom: 30px;
+            color: #80cbc4; /* Light green text for section headers */
+            text-transform: uppercase;
         }
 
         .section-title {
-            font-size: 14px;
-            color: #777;
+            font-size: 12px; /* Smaller section header */
+            color: #80cbc4; /* Light green for section headers */
             margin-bottom: 5px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             display: block;
         }
 
         .scanner-container {
             position: relative;
             width: 100%;
-            height: auto;
-            max-width: 400px;
+            height: 300px; /* Define height for the scanner */
             margin-bottom: 20px;
         }
 
         #scanner {
             width: 100%;
-            height: auto;
-            border: 2px solid #2196F3;
+            height: 100%; /* Make scanner fill the container */
+            object-fit: cover; /* Ensure camera fits within the defined container */
             border-radius: 8px;
-        }
-
-        .target-frame {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 70%;
-            height: 50px;
-            border: 2px solid #FF5722;
-            border-radius: 4px;
-            pointer-events: none;
-        }
-
-        .material-icons {
-            font-size: 50px;
-            color: #2196F3;
         }
 
         .input-field {
@@ -95,18 +73,19 @@
         button {
             width: 100%;
             padding: 10px;
-            background-color: #2196F3;
-            color: white;
+            background-color: #80cbc4; /* Light green button */
+            color: #121212; /* Dark text on button */
             font-size: 16px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.3s;
             font-weight: 600;
+            text-transform: lowercase; /* All buttons text lowercase */
         }
 
         button:hover {
-            background-color: #1976D2;
+            background-color: #4db6ac; /* Darker green on hover */
         }
 
         canvas {
@@ -118,65 +97,54 @@
         #barcodeInfo {
             margin-bottom: 20px;
             font-size: 14px;
-            color: #333;
+            color: #f4f4f4; /* Light text */
+            text-transform: lowercase;
         }
 
         #barcode {
             font-size: 18px;
-            color: #2196F3;
+            color: #80cbc4; /* Light green text for the barcode result */
             margin-bottom: 20px;
             text-align: center;
             font-weight: 600;
+            text-transform: lowercase;
         }
 
         /* Separator line */
         .separator {
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #3a3a3a;
             margin: 20px 0;
         }
-
-        /* Styling for section titles */
-        .small-text {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
-            display: block;
-        }
-
     </style>
 </head>
 <body>
     <div class="app-container">
-        <h1>Barcode Scanner</h1>
+        <h1>barcode scanner</h1>
 
         <div class="section">
-            <span class="section-title">Scanner Area</span>
+            <span class="section-title">scanner area</span>
             <div class="scanner-container">
                 <div id="scanner"></div>
-                <div class="target-frame"></div>
             </div>
         </div>
 
         <div class="separator"></div>
 
         <div class="section">
-            <span class="section-title">Scanned Info</span>
+            <span class="section-title">scanned info</span>
             <div id="barcodeInfo" class="input-field">
-                <p>Scan a barcode to display the number here.</p>
+                <p>scan a barcode to display the number here.</p>
             </div>
         </div>
 
         <div class="separator"></div>
 
         <div class="section">
-            <span class="section-title">Enter Discounted Price</span>
-            <input type="number" id="pricePence" placeholder="Enter Price (in Pence)" class="input-field">
-            <button onclick="generateBarcode()">Generate Barcode</button>
+            <span class="section-title">enter discounted price</span>
+            <input type="number" id="pricePence" placeholder="enter price (in pence)" class="input-field">
+            <button onclick="generateBarcode()">generate barcode</button>
         </div>
 
-        <!-- Missing element for displaying barcode -->
         <div id="barcode"></div>
 
         <canvas id="barcodeCanvas"></canvas>
@@ -210,7 +178,9 @@
                 },
                 decoder: {
                     readers: ["ean_reader"]
-                }
+                },
+                locate: true, // Improve sensitivity by enabling locator
+                frequency: 5 // Increase frequency to make detection faster
             }, function (err) {
                 if (err) {
                     console.log("QuaggaJS error:", err);
@@ -230,7 +200,7 @@
 
                 // Show the barcode number
                 document.getElementById("barcodeInfo").innerHTML = `
-                    <p>Scanned Barcode: ${originalBarcode}</p>
+                    <p>scanned barcode: ${originalBarcode}</p>
                 `;
             });
         }
@@ -240,11 +210,11 @@
 
             // Validate input
             if (!originalBarcode || originalBarcode.length !== 13) {
-                alert("Please scan a valid 13-digit barcode.");
+                alert("please scan a valid 13-digit barcode.");
                 return;
             }
             if (!pricePence || pricePence <= 0) {
-                alert("Please enter a valid price in pence.");
+                alert("please enter a valid price in pence.");
                 return;
             }
 
@@ -260,7 +230,7 @@
             barcode += checksum;
 
             // Display the result
-            document.getElementById("barcode").innerHTML = `Generated Barcode: ${barcode}`;
+            document.getElementById("barcode").innerHTML = `generated barcode: ${barcode}`;
 
             // Generate the barcode image that can be scanned at the till
             JsBarcode("#barcodeCanvas", barcode, {
