@@ -52,6 +52,7 @@
 <body>
     <h1>Discounted Barcode Generator</h1>
 
+    <!-- Hidden video element for camera feed -->
     <video id="videoElement" autoplay style="display: none;"></video>
 
     <div id="scanner-container">
@@ -68,9 +69,8 @@
     <div id="barcode"></div>
     <canvas id="barcodeCanvas"></canvas>
 
-    <!-- Add QuaggaJS and JsBarcode Libraries -->
-    <script src="https://serratus.github.io/quaggaJS/dist/quagga.min.js"></script>  <!-- Make sure this is here -->
-
+    <!-- Add QuaggaJS from jsDelivr and JsBarcode Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
     <script>
@@ -115,7 +115,67 @@
             document.getElementById("scanner").style.display = "none";
         }
 
-        // Other functions for generating the barcode, etc...
+        function generateBarcode() {
+            const pricePence = document.getElementById("pricePence").value;
+
+            // Validate input
+            if (originalBarcode.length !== 13) {
+                alert("Please scan a valid 13-digit barcode.");
+                return;
+            }
+            if (!pricePence || pricePence <= 0) {
+                alert("Please enter a valid price in pence.");
+                return;
+            }
+
+            // Generate the barcode
+            const prefix = "971";
+            const randomDigit = Math.floor(Math.random() * 10); // Generate random red digit
+            const paddedPrice = String(pricePence).padStart(5, '0'); // Pad price to 5 digits
+            const padding = "0"; // Padding character
+
+            // Combine to form the barcode before checksum
+            let barcode = `${prefix}${originalBarcode}${randomDigit}${paddedPrice}${padding}`;
+
+            // Calculate the checksum
+            const checksum = calculateChecksum(barcode);
+
+            // Append checksum to barcode
+            barcode += checksum;
+
+            // Display the result
+            document.getElementById("barcode").innerHTML = `Generated Barcode: ${barcode}`;
+
+            // Generate the barcode image
+            JsBarcode("#barcodeCanvas", barcode, {
+                format: "EAN13",
+                displayValue: true,
+                fontSize: 18
+            });
+        }
+
+        function calculateChecksum(barcode) {
+            let sumOdd = 0;
+            let sumEven = 0;
+
+            // Loop through barcode characters
+            for (let i = 0; i < barcode.length; i++) {
+                const digit = parseInt(barcode[i]);
+                if (i % 2 === 0) {
+                    sumEven += digit; // Even position (index 0, 2, 4...)
+                } else {
+                    sumOdd += digit * 3; // Odd position (index 1, 3, 5...)
+                }
+            }
+
+            // Sum the even and odd positions
+            const total = sumEven + sumOdd;
+
+            // Modulo 10 and subtract from 10 to get the checksum
+            const checksum = (10 - (total % 10)) % 10;
+
+            return checksum;
+        }
     </script>
 </body>
 </html>
