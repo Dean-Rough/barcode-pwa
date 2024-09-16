@@ -52,6 +52,9 @@
 <body>
     <h1>Discounted Barcode Generator</h1>
 
+    <!-- Video element for camera feed -->
+    <video id="videoElement" autoplay style="display: none;"></video>
+
     <div id="scanner-container">
         <button onclick="startScanner()">Start Barcode Scanner</button>
         <button onclick="stopScanner()">Stop Scanner</button>
@@ -73,52 +76,18 @@
     <script>
         let originalBarcode = '';
 
-        <video id="videoElement" autoplay></video>
+        // Simple Camera Test
+        var video = document.querySelector("#videoElement");
 
-<script>
-  // Simple Camera Test
-  var video = document.querySelector("#videoElement");
-
-  if (navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ video: true })
-    .then(function (stream) {
-      video.srcObject = stream;
-    })
-    .catch(function (err) {
-      console.log("Camera access error: " + err);
-    });
-  }
-
-  function startScanner() {
-      document.getElementById("scanner").style.display = "block";
-      Quagga.init({
-          inputStream: {
-              type: "LiveStream",
-              target: document.querySelector('#scanner'),
-              constraints: {
-                  width: 400,
-                  height: 300,
-                  facingMode: "environment" // Rear camera
-              }
-          },
-          decoder: {
-              readers: ["ean_reader"]
-          }
-      }, function (err) {
-          if (err) {
-              console.log(err);
-              return;
-          }
-          Quagga.start();
-      });
-
-      Quagga.onDetected(function (result) {
-          originalBarcode = result.codeResult.code;
-          alert(`Barcode Detected: ${originalBarcode}`);
-          Quagga.stop(); // Stop after detecting the first barcode
-      });
-  }
-</script>
+        if (navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function (stream) {
+                    video.srcObject = stream;
+                })
+                .catch(function (err) {
+                    console.log("Camera access error: " + err);
+                });
+        }
 
         function startScanner() {
             document.getElementById("scanner").style.display = "block";
@@ -129,7 +98,7 @@
                     constraints: {
                         width: 400,
                         height: 300,
-                        facingMode: "environment"
+                        facingMode: "environment" // Rear camera
                     }
                 },
                 decoder: {
