@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discounted Barcode Generator</title>
 
-    <!-- Link to manifest file for PWA -->
     <link rel="manifest" href="manifest.json">
 
-    <!-- Add service worker registration for PWA -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -52,14 +50,14 @@
 <body>
     <h1>Discounted Barcode Generator</h1>
 
-    <!-- Hidden video element for camera feed -->
-    <video id="videoElement" autoplay style="display: none;"></video>
-
     <div id="scanner-container">
         <button onclick="startScanner()">Start Barcode Scanner</button>
         <button onclick="stopScanner()">Stop Scanner</button>
         <div id="scanner" style="display:none;"></div>
     </div>
+
+    <!-- Display item info after scanning -->
+    <div id="barcodeInfo"></div>
 
     <label for="pricePence">Enter Discounted Price (in Pence):</label><br>
     <input type="number" id="pricePence" placeholder="e.g. 32"><br>
@@ -69,7 +67,7 @@
     <div id="barcode"></div>
     <canvas id="barcodeCanvas"></canvas>
 
-    <!-- Add QuaggaJS from jsDelivr and JsBarcode Libraries -->
+    <!-- Add QuaggaJS and JsBarcode Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
@@ -91,7 +89,7 @@
                     }
                 },
                 decoder: {
-                    readers: ["ean_reader"] // Adjust if you're scanning different types of barcodes
+                    readers: ["ean_reader"]
                 }
             }, function (err) {
                 if (err) {
@@ -103,10 +101,19 @@
             });
 
             Quagga.onDetected(function (result) {
-                console.log("Barcode detected:", result.codeResult.code);
-                originalBarcode = result.codeResult.code;
-                alert(`Barcode Detected: ${originalBarcode}`);
-                Quagga.stop(); // Stop after detecting the first barcode
+                const barcode = result.codeResult.code;
+                console.log("Barcode detected:", barcode);
+
+                // Stop the scanner
+                Quagga.stop();
+                document.getElementById("scanner").style.display = "none";
+
+                // Display the barcode and any associated info (replace with real data)
+                document.getElementById("barcodeInfo").innerHTML = `
+                    <p>Item Scanned: ${barcode}</p>
+                    <img src="https://via.placeholder.com/100" alt="Item Image" />
+                    <p>Item information will be displayed here.</p>
+                `;
             });
         }
 
@@ -134,19 +141,17 @@
             const paddedPrice = String(pricePence).padStart(5, '0'); // Pad price to 5 digits
             const padding = "0"; // Padding character
 
-            // Combine to form the barcode before checksum
             let barcode = `${prefix}${originalBarcode}${randomDigit}${paddedPrice}${padding}`;
-
-            // Calculate the checksum
             const checksum = calculateChecksum(barcode);
 
-            // Append checksum to barcode
             barcode += checksum;
 
-            // Display the result
             document.getElementById("barcode").innerHTML = `Generated Barcode: ${barcode}`;
 
-            // Generate the barcode image
+            // Generate
+                    document.getElementById("barcode").innerHTML = `Generated Barcode: ${barcode}`;
+
+            // Generate the barcode image that can be scanned at the till
             JsBarcode("#barcodeCanvas", barcode, {
                 format: "EAN13",
                 displayValue: true,
