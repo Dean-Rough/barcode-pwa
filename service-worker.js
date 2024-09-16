@@ -3,10 +3,10 @@ const appShellFiles = [
   './',
   './index.html',
   './manifest.json',
-  './service-worker.js',
+  './style.css', // If you have an external CSS file
   './icons/icon-192x192.png',
   './icons/icon-512x512.png',
-  'https://serratus.github.io/quaggaJS/dist/quagga.min.js',
+  'https://unpkg.com/@ericblade/quagga2/dist/quagga.js',
   'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js'
 ];
 
