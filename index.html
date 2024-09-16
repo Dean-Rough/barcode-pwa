@@ -10,7 +10,7 @@
     <!-- Use Open Sans font -->
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
 
-    <!-- Add custom styling with white background and #232323 for text -->
+    <!-- Custom styling for white background and dark elements -->
     <style>
         body {
             font-family: 'Open Sans', sans-serif;
@@ -177,10 +177,11 @@
                     }
                 },
                 decoder: {
-                    readers: ["ean_reader"]
+                    readers: ["ean_reader"] // Make sure it scans EAN barcodes
                 },
-                locate: true, // Improve sensitivity by enabling locator
-                frequency: 5 // Increase frequency to make detection faster
+                locate: true, // Enable locating for better detection
+                frequency: 10, // Make detection more frequent for higher sensitivity
+                halfSample: false // Ensure it uses full resolution for more accuracy
             }, function (err) {
                 if (err) {
                     console.log("QuaggaJS error:", err);
@@ -191,17 +192,19 @@
             });
 
             Quagga.onDetected(function (result) {
-                originalBarcode = result.codeResult.code;
-                console.log("Barcode detected:", originalBarcode);
+                if (result && result.codeResult) {
+                    originalBarcode = result.codeResult.code;
+                    console.log("Barcode detected:", originalBarcode);
 
-                // Stop the scanner
-                Quagga.stop();
-                document.getElementById("scanner").style.display = "none";
+                    // Stop the scanner
+                    Quagga.stop();
+                    document.getElementById("scanner").style.display = "none";
 
-                // Show the barcode number
-                document.getElementById("barcodeInfo").innerHTML = `
-                    <p>Scanned barcode: ${originalBarcode}</p>
-                `;
+                    // Show the barcode number
+                    document.getElementById("barcodeInfo").innerHTML = `
+                        <p>Scanned barcode: ${originalBarcode}</p>
+                    `;
+                }
             });
         }
 
