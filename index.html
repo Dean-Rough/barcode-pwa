@@ -14,8 +14,136 @@
 
     <!-- Custom styling -->
     <style>
-        /* (Same CSS as before) */
-        /* ... */
+        /* Reset and box-sizing */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body styling */
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #FAFAFA;
+            color: #212121;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* Container */
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* Header */
+        .app-header {
+            background-color: #6200EE;
+            color: #FFFFFF;
+            padding: 20px;
+            text-align: center;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .app-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* Section styling */
+        .section {
+            padding: 20px 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #6200EE;
+        }
+
+        /* Scanner container */
+        .scanner-container {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            background-color: #E0E0E0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #scanner video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Input field */
+        .input-field {
+            width: 100%;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-field input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 1px solid #CCCCCC;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-field input:focus {
+            border-color: #6200EE;
+        }
+
+        /* Button styling */
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #6200EE;
+            color: #FFFFFF;
+            font-size: 16px;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            background-color: #3700B3;
+        }
+
+        /* Barcode display */
+        #barcodeDisplay {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Canvas styling */
+        #barcodeCanvas {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+        }
+
+        /* Separator line */
+        .separator {
+            border-bottom: 1px solid #e0e0e0;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -28,12 +156,13 @@
         <!-- Scanner Section -->
         <div class="section">
             <div class="section-title">Scan Product Barcode</div>
+            <button class="btn" onclick="startScanner()">Start Scanner</button>
             <div class="scanner-container" id="scannerContainer" style="display: none;">
                 <div id="scanner"></div>
             </div>
-            <!-- Start Scanner Button -->
-            <button class="btn" onclick="startScanner()">Start Scanner</button>
         </div>
+
+        <div class="separator"></div>
 
         <!-- Scanned Info Section -->
         <div class="section">
@@ -42,6 +171,8 @@
                 <p>Please scan a barcode to display the number here.</p>
             </div>
         </div>
+
+        <div class="separator"></div>
 
         <!-- Price Input Section -->
         <div class="section">
@@ -53,13 +184,9 @@
         </div>
 
         <!-- Barcode Display Section -->
-        <div id="barcodeDisplay" class="section"></div>
-    </div>
-
-    <!-- Barcode Popup -->
-    <div id="barcodePopup">
-        <span class="material-icons close-btn" onclick="closePopup()">close</span>
-        <canvas id="popupBarcodeCanvas"></canvas>
+        <div id="barcodeDisplay" class="section">
+            <canvas id="barcodeCanvas"></canvas>
+        </div>
     </div>
 
     <!-- Include QuaggaJS and JsBarcode Libraries -->
@@ -70,69 +197,133 @@
     <script>
         let originalBarcode = '';
 
+        // Start the scanner when the user clicks the button
         function startScanner() {
-            // Show the scanner container
+            console.log("Starting scanner...");
             document.getElementById("scannerContainer").style.display = "block";
 
-            // Initialize QuaggaJS
             Quagga.init({
                 inputStream: {
                     type: "LiveStream",
                     target: document.querySelector('#scanner'),
                     constraints: {
-                        facingMode: "environment",
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        facingMode: "environment" // Rear camera
                     }
                 },
                 decoder: {
                     readers: ["ean_reader"]
                 },
-                locate: true
-            }, function(err) {
+                locate: true,
+                frequency: 10,
+                halfSample: false
+            }, function (err) {
                 if (err) {
-                    console.error(err);
+                    console.log("QuaggaJS error:", err);
                     alert("Error initializing the scanner: " + err.message);
                     return;
                 }
+                console.log("QuaggaJS initialized successfully.");
                 Quagga.start();
             });
 
-            // When a barcode is detected
-            Quagga.onDetected(function(result) {
-                originalBarcode = result.codeResult.code;
-                console.log("Barcode detected:", originalBarcode);
+            Quagga.onDetected(function (result) {
+                if (result && result.codeResult) {
+                    originalBarcode = result.codeResult.code;
+                    console.log("Barcode detected:", originalBarcode);
 
-                // Stop the scanner
-                Quagga.stop();
+                    // Stop the scanner
+                    Quagga.stop();
+                    document.getElementById("scannerContainer").style.display = "none";
 
-                // Display the scanned barcode
-                document.getElementById("barcodeInfo").innerHTML = `
-                    <p>${originalBarcode}</p>
-                `;
-
-                // Hide the scanner container
-                document.getElementById("scannerContainer").style.display = "none";
+                    // Show the barcode number
+                    document.getElementById("barcodeInfo").innerHTML = `
+                        <p>${originalBarcode}</p>
+                    `;
+                }
             });
         }
 
-        // Rest of the JavaScript code remains the same
-        // ...
-
         function generateBarcode() {
-            // (Your existing generateBarcode function)
+            const pricePence = document.getElementById("pricePence").value;
+
+            // Validate input
+            if (!originalBarcode || originalBarcode.length !== 13) {
+                alert("Please scan a valid 13-digit barcode.");
+                return;
+            }
+            if (!pricePence || pricePence <= 0) {
+                alert("Please enter a valid price in pence.");
+                return;
+            }
+
+            // Step 1: Prefix for discounted barcode (971)
+            const prefix = "971";
+
+            // Step 2: Use the entire product barcode
+            const productCode = originalBarcode;
+
+            // Step 3: Generate a random digit (0-9)
+            const randomDigit = Math.floor(Math.random() * 10);
+
+            // Step 4: Convert the discounted price to 5 digits (padding if necessary)
+            const paddedPrice = String(pricePence).padStart(5, '0');
+
+            // Step 5: Add a padding '0'
+            const paddingZero = "0";
+
+            // Combine to form the barcode before the checksum
+            let barcode = `${prefix}${productCode}${randomDigit}${paddedPrice}${paddingZero}`;
+
+            // Step 6: Calculate the checksum
+            const checksum = calculateChecksum(barcode);
+
+            // Final barcode with checksum
+            barcode += checksum;
+
+            // Display the result
+            document.getElementById("barcodeDisplay").innerHTML = `
+                <p>Generated Barcode: ${barcode}</p>
+            `;
+
+            // Generate the barcode image
+            JsBarcode("#barcodeCanvas", barcode, {
+                format: "EAN13",
+                displayValue: true,
+                fontSize: 18,
+                background: "#FFFFFF",
+                lineColor: "#000000",
+                width: 2,
+                height: 100
+            });
         }
 
         function calculateChecksum(barcode) {
-            // (Your existing calculateChecksum function)
-        }
+            let sumEven = 0;
+            let sumOdd = 0;
 
-        function showPopupBarcode(barcode) {
-            // (Your existing showPopupBarcode function)
-        }
+            // Loop through the digits, excluding the checksum digit
+            for (let i = 0; i < barcode.length; i++) {
+                const digit = parseInt(barcode[i], 10);
 
-        function closePopup() {
-            // (Your existing closePopup function)
+                if ((i + 1) % 2 === 0) {
+                    // Even position
+                    sumEven += digit;
+                } else {
+                    // Odd position
+                    sumOdd += digit;
+                }
+            }
+
+            // Multiply sum of odd positions by 3
+            sumOdd *= 3;
+
+            // Calculate total sum
+            const totalSum = sumEven + sumOdd;
+
+            // Calculate checksum digit
+            const checksumDigit = (10 - (totalSum % 10)) % 10;
+
+            return checksumDigit;
         }
     </script>
 </body>
