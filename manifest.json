@@ -1,11 +1,11 @@
 {
-  "name": "Barcode Generator",
-  "short_name": "BarcodeApp",
-  "description": "A Discounted Barcode Generator App",
+  "name": "BarScan",
+  "short_name": "BarcodeScanner",
+  "description": "An app to scan and generate barcodes.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4CAF50",
+  "background_color": "#FAFAFA",
+  "theme_color": "#6200EE",
   "icons": [
     {
       "src": "icons/icon-192x192.png",
