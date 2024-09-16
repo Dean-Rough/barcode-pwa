@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discounted Barcode Generator</title>
+
+    <!-- Link to manifest file for PWA -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Add service worker registration for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope: ', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed: ', error);
+                    });
+            });
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #barcode {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: green;
+        }
+        #scanner-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Discounted Barcode Generator</h1>
+
+    <div id="scanner-container">
+        <button onclick="startScanner()">Start Barcode Scanner</button>
+        <button onclick="stopScanner()">Stop Scanner</button>
+        <div id="scanner" style="display:none;"></div>
+    </div>
+
+    <label for="pricePence">Enter Discounted Price (in Pence):</label><br>
+    <input type="number" id="pricePence" placeholder="e.g. 32"><br>
+
+    <button onclick="generateBarcode()">Generate Discounted Barcode</button>
+
+    <div id="barcode"></div>
+    <canvas id="barcodeCanvas"></canvas>
+
+    <!-- Add QuaggaJS and JsBarcode Libraries -->
+    <script src="https://serratus.github.io/quaggaJS/dist/quagga.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
+    <script>
+        let originalBarcode = '';
+
+        function startScanner() {
+            document.getElementById("scanner").style.display = "block";
+            Quagga.init({
+                inputStream: {
+                    type: "LiveStream",
+                    target: document.querySelector('#scanner'),
+                    constraints: {
+                        width: 400,
+                        height: 300,
+                        facingMode: "environment" // Use rear camera
+                    },
+                },
+                decoder: {
+                    readers: ["ean_reader"] // EAN barcode reader
+                }
+            }, function (err) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                Quagga.start();
+            });
+
+            Quagga.onDetected(function (result) {
+                originalBarcode = result.codeResult.code;
+                alert(`Barcode Detected: ${originalBarcode}`);
+                Quagga.stop(); // Stop after detecting the first barcode
+            });
+        }
+
+        function stopScanner() {
+            Quagga.stop();
+            document.getElementById("scanner").style.display = "none";
+        }
+
+        function generateBarcode() {
+            const pricePence = document.getElementById("pricePence").value;
+
+            // Validate input
+            if (originalBarcode.length !== 13) {
+                alert("Please scan a valid 13-digit barcode.");
+                return;
+            }
+            if (!pricePence || pricePence <= 0) {
+                alert("Please enter a valid price in pence.");
+                return;
+            }
+
+            // Generate the barcode
+            const prefix = "971";
+            const randomDigit = Math.floor(Math.random() * 10); // Generate random red digit
+            const paddedPrice = String(pricePence).padStart(5, '0'); // Pad price to 5 digits
+            const padding = "0"; // Padding character
+
+            // Combine to form the barcode before checksum
+            let barcode = `${prefix}${originalBarcode}${randomDigit}${paddedPrice}${padding}`;
+
+            // Calculate the checksum
+            const checksum = calculateChecksum(barcode);
+
+            // Append checksum to barcode
+            barcode += checksum;
+
+            // Display the result
+            document.getElementById("barcode").innerHTML = `Generated Barcode: ${barcode}`;
+
+            // Generate the barcode image
+            JsBarcode("#barcodeCanvas", barcode, {
+                format: "EAN13",
+                displayValue: true,
+                fontSize: 18
+            });
+        }
+
+        function calculateChecksum(barcode) {
+            let sumOdd = 0;
+            let sumEven = 0;
+
+            // Loop through barcode characters
+            for (let i = 0; i < barcode.length; i++) {
+                const digit = parseInt(barcode[i]);
+                if (i % 2 === 0) {
+                    sumEven += digit; // Even position (index 0, 2, 4...)
+                } else {
+                    sumOdd += digit * 3; // Odd position (index 1, 3, 5...)
+                }
+            }
+
+            // Sum the even and odd positions
+            const total = sumEven + sumOdd;
+
+            // Modulo 10 and subtract from 10 to get the checksum
+            const checksum = (10 - (total % 10)) % 10;
+
+            return checksum;
+        }
+    </script>
+</body>
+</html>
