@@ -1,132 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Meta tags and title -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode scanner</title>
+    <title>Barcode Scanner 3000</title>
 
-    <link rel="manifest" href="manifest.json">
+    <!-- Link to the DM Sans font -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Use Open Sans font -->
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-    <!-- Custom styling for white background and dark elements -->
+    <!-- Custom styling -->
     <style>
-        body {
-            font-family: 'Open Sans', sans-serif;
+        /* Reset and box-sizing */
+        * {
             margin: 0;
             padding: 0;
-            background-color: #ffffff; /* White background */
-            color: #232323; /* Dark text */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
             box-sizing: border-box;
         }
 
+        /* Body styling */
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #FAFAFA;
+            color: #212121;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* Container */
         .app-container {
             width: 100%;
             max-width: 400px;
-            padding: 20px;
-            background-color: #ffffff; /* White container background */
-            border-radius: 8px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
 
-        h1 {
+        /* Header */
+        .app-header {
+            background-color: #6200EE;
+            color: #FFFFFF;
+            padding: 20px;
             text-align: center;
+        }
+
+        .app-header h1 {
             font-size: 24px;
-            margin-bottom: 20px;
-            color: #232323; /* Dark header text */
-            text-transform: capitalize; /* Sentence case for header */
+            font-weight: 700;
+        }
+
+        /* Section styling */
+        .section {
+            padding: 20px;
         }
 
         .section-title {
-            font-size: 14px; /* Standard text size */
-            color: #232323;
-            margin-bottom: 5px;
-            text-transform: capitalize; /* Sentence case for section titles */
-            display: block;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #6200EE;
         }
 
+        /* Scanner container */
         .scanner-container {
             position: relative;
             width: 100%;
-            height: 300px; /* Define height for the scanner */
-            margin-bottom: 20px;
-        }
-
-        #scanner {
-            width: 100%;
-            height: 100%; /* Make scanner fill the container */
-            object-fit: cover; /* Ensure camera fits within the defined container */
+            height: 240px;
+            background-color: #E0E0E0;
             border-radius: 8px;
+            overflow: hidden;
         }
 
+        #scanner video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Input field */
         .input-field {
             width: 100%;
             margin-bottom: 20px;
+            position: relative;
         }
 
-        button {
+        .input-field input {
             width: 100%;
-            padding: 10px;
-            background-color: #232323; /* Dark button */
-            color: #ffffff; /* White text */
+            padding: 15px 20px;
             font-size: 16px;
+            border: 1px solid #CCCCCC;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-field input:focus {
+            border-color: #6200EE;
+        }
+
+        /* Button styling */
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #6200EE;
+            color: #FFFFFF;
+            font-size: 16px;
+            font-weight: 500;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.3s;
-            font-weight: 600;
-            text-transform: capitalize; /* Sentence case for buttons */
+            text-transform: uppercase;
         }
 
-        button:hover {
-            background-color: #3a3a3a; /* Darker shade on hover */
+        .btn:hover {
+            background-color: #3700B3;
         }
 
-        canvas {
-            margin-top: 20px;
-            width: 100%;
-            height: auto;
-        }
-
-        #barcodeInfo {
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #232323; /* Dark text */
-            text-transform: capitalize;
-        }
-
-        #barcode {
-            font-size: 18px;
-            color: #232323; /* Dark text */
-            margin-bottom: 20px;
+        /* Barcode display */
+        #barcodeDisplay {
             text-align: center;
-            font-weight: 600;
-            text-transform: capitalize;
+            margin-top: 20px;
         }
 
-        /* Full-screen pop-up for barcode */
+        /* Full-screen barcode popup */
         #barcodePopup {
-            display: none; /* Hidden by default */
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: white;
+            background-color: rgba(33, 33, 33, 0.9);
             z-index: 9999;
             justify-content: center;
             align-items: center;
-            text-align: center;
+            flex-direction: column;
         }
 
         #barcodePopup canvas {
-            width: 80%; /* Barcode takes up 80% of the width */
+            background-color: #FFFFFF;
+            padding: 20px;
+            border-radius: 8px;
         }
 
         /* Close button */
@@ -134,196 +155,198 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            font-size: 24px;
+            font-size: 32px;
             cursor: pointer;
-            color: #232323;
+            color: #FFFFFF;
         }
 
-        .separator {
-            border-bottom: 1px solid #e0e0e0;
-            margin: 20px 0;
+        /* Material icon */
+        .material-icons {
+            vertical-align: middle;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <h1>Barcode scanner 3000</h1>
+        <!-- Header -->
+        <div class="app-header">
+            <h1>Barcode Scanner 3000</h1>
+        </div>
 
+        <!-- Scanner Section -->
         <div class="section">
-            <span class="section-title">Scanner area</span>
-            <div class="scanner-container">
+            <div class="section-title">Scan Product Barcode</div>
+            <div class="scanner-container" id="scannerContainer">
                 <div id="scanner"></div>
             </div>
         </div>
 
-        <div class="separator"></div>
-
+        <!-- Scanned Info Section -->
         <div class="section">
-            <span class="section-title">Scanned info</span>
+            <div class="section-title">Scanned Barcode</div>
             <div id="barcodeInfo" class="input-field">
-                <p>Scan a barcode to display the number here.</p>
+                <p>Please scan a barcode to display the number here.</p>
             </div>
         </div>
 
-        <div class="separator"></div>
-
+        <!-- Price Input Section -->
         <div class="section">
-            <span class="section-title">Enter discounted price</span>
-            <input type="number" id="pricePence" placeholder="Enter price (in pence)" class="input-field">
-            <button onclick="generateBarcode()">Generate barcode</button>
+            <div class="section-title">Enter Discounted Price (in pence)</div>
+            <div class="input-field">
+                <input type="number" id="pricePence" placeholder="e.g., 199">
+            </div>
+            <button class="btn" onclick="generateBarcode()">Generate Barcode</button>
         </div>
 
-        <div id="barcode"></div>
-
-        <div id="barcodePopup">
-            <span class="close-btn" onclick="closePopup()">&times;</span>
-            <canvas id="popupBarcodeCanvas"></canvas>
-        </div>
+        <!-- Barcode Display Section -->
+        <div id="barcodeDisplay" class="section"></div>
     </div>
 
-    <!-- Add QuaggaJS and JsBarcode Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+    <!-- Barcode Popup -->
+    <div id="barcodePopup">
+        <span class="material-icons close-btn" onclick="closePopup()">close</span>
+        <canvas id="popupBarcodeCanvas"></canvas>
+    </div>
+
+    <!-- Include QuaggaJS and JsBarcode Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
+    <!-- JavaScript Code -->
     <script>
         let originalBarcode = '';
 
-        // Automatically start the scanner when the app is launched
+        // Start the scanner when the window loads
         window.onload = function() {
             startScanner();
         };
 
         function startScanner() {
-            console.log("Starting scanner...");
-            document.getElementById("scanner").style.display = "block";
-
+            // Initialize QuaggaJS
             Quagga.init({
                 inputStream: {
                     type: "LiveStream",
                     target: document.querySelector('#scanner'),
                     constraints: {
-                        width: 400,
-                        height: 300,
-                        facingMode: "environment" // Rear camera
+                        facingMode: "environment"
                     }
                 },
                 decoder: {
                     readers: ["ean_reader"]
                 },
-                locate: true, // Improve sensitivity by enabling locator
-                frequency: 10, // Increase frequency for better sensitivity
-                halfSample: false // Full resolution for more accurate scanning
-            }, function (err) {
+                locate: true
+            }, function(err) {
                 if (err) {
-                    console.log("QuaggaJS error:", err);
+                    console.error(err);
                     return;
                 }
-                console.log("QuaggaJS initialized successfully.");
                 Quagga.start();
             });
 
-            Quagga.onDetected(function (result) {
+            // When a barcode is detected
+            Quagga.onDetected(function(result) {
                 originalBarcode = result.codeResult.code;
                 console.log("Barcode detected:", originalBarcode);
 
                 // Stop the scanner
                 Quagga.stop();
-                document.getElementById("scanner").style.display = "none";
 
-                // Show the barcode number
+                // Display the scanned barcode
                 document.getElementById("barcodeInfo").innerHTML = `
-                    <p>Scanned barcode: ${originalBarcode}</p>
+                    <p>${originalBarcode}</p>
                 `;
+
+                // Hide the scanner container
+                document.getElementById("scannerContainer").style.display = "none";
             });
         }
 
         function generateBarcode() {
-            const pricePence = document.getElementById("pricePence").value;
+            const pricePence = document.getElementById("pricePence").value.trim();
 
             // Validate input
             if (!originalBarcode || originalBarcode.length !== 13) {
                 alert("Please scan a valid 13-digit barcode.");
                 return;
             }
-            if (!pricePence || pricePence <= 0) {
+            if (!pricePence || pricePence <= 0 || !Number.isInteger(Number(pricePence))) {
                 alert("Please enter a valid price in pence.");
                 return;
             }
 
-            // Step 1: Prefix for discounted barcode (971)
+            // Build the discounted barcode
             const prefix = "971";
-            
-            // Step 2: Use the first 6 digits of the product's barcode
-            const productCode = originalBarcode.substring(0, 6); 
+            const productCode = originalBarcode;
+            const randomDigit = Math.floor(Math.random() * 10);
+            const paddedPrice = String(pricePence).padStart(5, '0');
+            const paddingZero = "0";
 
-            // Step 3: Generate a random red digit (0-9)
-            const randomDigit = Math.floor(Math.random() * 10); 
+            // Barcode before checksum
+            let barcode = `${prefix}${productCode}${randomDigit}${paddedPrice}${paddingZero}`;
 
-            // Step 4: Convert the discounted price to 5 digits (padding if necessary)
-            const paddedPrice = String(pricePence).padStart(5, '0'); 
-
-            // Step 5: Add a padding '0'
-            const padding = "0"; 
-
-            // Combine to form the barcode before the checksum
-            let barcode = `${prefix}${productCode}${randomDigit}${paddedPrice}${padding}`;
-
-            // Step 6: Calculate the checksum
+            // Calculate the checksum
             const checksum = calculateChecksum(barcode);
 
             // Final barcode with checksum
             barcode += checksum;
 
-            // Display the result
-            document.getElementById("barcode").innerHTML = `Generated barcode: ${barcode}`;
+            // Display the generated barcode
+            document.getElementById("barcodeDisplay").innerHTML = `
+                <p>Generated Barcode: ${barcode}</p>
+            `;
 
-            // Show the barcode in the full-screen pop-up
+            // Show the barcode in the popup
             showPopupBarcode(barcode);
         }
 
         function calculateChecksum(barcode) {
-            let sumOdd = 0;
             let sumEven = 0;
+            let sumOdd = 0;
 
-                       // Loop through barcode characters (first 12 digits only)
+            // Exclude the checksum digit
             for (let i = 0; i < barcode.length; i++) {
-                const digit = parseInt(barcode[i]);
-                if (i % 2 === 0) {
-                    sumEven += digit; // Even position (index 0, 2, 4...)
+                const digit = parseInt(barcode[i], 10);
+
+                if ((i + 1) % 2 === 0) {
+                    // Even position
+                    sumEven += digit;
                 } else {
-                    sumOdd += digit * 3; // Odd position (index 1, 3, 5...)
+                    // Odd position
+                    sumOdd += digit;
                 }
             }
 
-            // Sum the even and odd positions
-            const total = sumEven + sumOdd;
+            // Multiply sum of odd positions by 3
+            sumOdd *= 3;
 
-            // Modulo 10 and subtract from 10 to get the checksum
-            const checksum = (10 - (total % 10)) % 10;
+            // Calculate total sum
+            const totalSum = sumEven + sumOdd;
 
-            return checksum;
+            // Calculate checksum digit
+            const checksumDigit = (10 - (totalSum % 10)) % 10;
+
+            return checksumDigit;
         }
 
-        // Function to display barcode in full-screen pop-up
         function showPopupBarcode(barcode) {
             const popup = document.getElementById('barcodePopup');
-            popup.style.display = 'flex'; // Show pop-up
+            popup.style.display = 'flex';
 
-            // Generate the barcode in the pop-up canvas
+            // Generate the barcode in the popup canvas
             JsBarcode("#popupBarcodeCanvas", barcode, {
                 format: "EAN13",
                 displayValue: true,
-                fontSize: 40, // Larger font for easier reading
-                background: "#ffffff", // White background
-                lineColor: "#000000", // Black lines for barcode
-                width: 2 // Line thickness for easier scanning
+                fontSize: 20,
+                background: "#FFFFFF",
+                lineColor: "#000000",
+                width: 2,
+                height: 100
             });
         }
 
-        // Function to close the full-screen pop-up
         function closePopup() {
             const popup = document.getElementById('barcodePopup');
-            popup.style.display = 'none'; // Hide pop-up
+            popup.style.display = 'none';
         }
     </script>
 </body>
