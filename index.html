@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode scanner 2</title>
+    <title>Barcode scanner</title>
 
     <link rel="manifest" href="manifest.json">
 
@@ -110,7 +110,35 @@
             text-transform: capitalize;
         }
 
-        /* Separator line */
+        /* Full-screen pop-up for barcode */
+        #barcodePopup {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        #barcodePopup canvas {
+            width: 80%; /* Barcode takes up 80% of the width */
+        }
+
+        /* Close button */
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #232323;
+        }
+
         .separator {
             border-bottom: 1px solid #e0e0e0;
             margin: 20px 0;
@@ -119,7 +147,7 @@
 </head>
 <body>
     <div class="app-container">
-        <h1>Barcode scanner 2000</h1>
+        <h1>Barcode scanner</h1>
 
         <div class="section">
             <span class="section-title">Scanner area</span>
@@ -147,7 +175,10 @@
 
         <div id="barcode"></div>
 
-        <canvas id="barcodeCanvas"></canvas>
+        <div id="barcodePopup">
+            <span class="close-btn" onclick="closePopup()">&times;</span>
+            <canvas id="popupBarcodeCanvas"></canvas>
+        </div>
     </div>
 
     <!-- Add QuaggaJS and JsBarcode Libraries -->
@@ -177,11 +208,11 @@
                     }
                 },
                 decoder: {
-                    readers: ["ean_reader"] // Make sure it scans EAN barcodes
+                    readers: ["ean_reader"]
                 },
-                locate: true, // Enable locating for better detection
-                frequency: 10, // Make detection more frequent for higher sensitivity
-                halfSample: false // Ensure it uses full resolution for more accuracy
+                locate: true, // Improve sensitivity by enabling locator
+                frequency: 10, // Increase frequency for better sensitivity
+                halfSample: false // Full resolution for more accurate scanning
             }, function (err) {
                 if (err) {
                     console.log("QuaggaJS error:", err);
@@ -192,92 +223,108 @@
             });
 
             Quagga.onDetected(function (result) {
-                if (result && result.codeResult) {
-                    originalBarcode = result.codeResult.code;
-                    console.log("Barcode detected:", originalBarcode);
+                originalBarcode = result.codeResult.code;
+                console.log("Barcode detected:", originalBarcode);
 
-                    // Stop the scanner
-                    Quagga.stop();
-                    document.getElementById("scanner").style.display = "none";
+                // Stop the scanner
+                Quagga.stop();
+                document.getElementById("scanner").style.display = "none";
 
-                    // Show the barcode number
-                    document.getElementById("barcodeInfo").innerHTML = `
-                        <p>Scanned barcode: ${originalBarcode}</p>
-                    `;
-                }
+                // Show the barcode number
+                document.getElementById("barcodeInfo").innerHTML = `
+                    <p>Scanned barcode: ${originalBarcode}</p>
+                `;
             });
         }
 
         function generateBarcode() {
-    const pricePence = document.getElementById("pricePence").value;
+            const pricePence = document.getElementById("pricePence").value;
 
-    // Validate input
-    if (!originalBarcode || originalBarcode.length !== 13) {
-        alert("Please scan a valid 13-digit barcode.");
-        return;
-    }
-    if (!pricePence || pricePence <= 0) {
-        alert("Please enter a valid price in pence.");
-        return;
-    }
+            // Validate input
+            if (!originalBarcode || originalBarcode.length !== 13) {
+                alert("Please scan a valid 13-digit barcode.");
+                return;
+            }
+            if (!pricePence || pricePence <= 0) {
+                alert("Please enter a valid price in pence.");
+                return;
+            }
 
-    // Step 1: Prefix for discounted barcode (971)
-    const prefix = "971";
-    
-    // Step 2: Use the first 6 digits of the product's barcode
-    const productCode = originalBarcode.substring(0, 6); 
+            // Step 1: Prefix for discounted barcode (971)
+            const prefix = "971";
+            
+            // Step 2: Use the first 6 digits of the product's barcode
+            const productCode = originalBarcode.substring(0, 6); 
 
-    // Step 3: Generate a random red digit (0-9)
-    const randomDigit = Math.floor(Math.random() * 10); 
+            // Step 3: Generate a random red digit (0-9)
+            const randomDigit = Math.floor(Math.random() * 10); 
 
-    // Step 4: Convert the discounted price to 5 digits (padding if necessary)
-    const paddedPrice = String(pricePence).padStart(5, '0'); 
+            // Step 4: Convert the discounted price to 5 digits (padding if necessary)
+            const paddedPrice = String(pricePence).padStart(5, '0'); 
 
-    // Step 5: Add a padding '0'
-    const padding = "0"; 
+            // Step 5: Add a padding '0'
+            const padding = "0"; 
 
-    // Combine to form the barcode before the checksum
-    let barcode = `${prefix}${productCode}${randomDigit}${paddedPrice}${padding}`;
+            // Combine to form the barcode before the checksum
+            let barcode = `${prefix}${productCode}${randomDigit}${paddedPrice}${padding}`;
 
-    // Step 6: Calculate the checksum
-    const checksum = calculateChecksum(barcode);
+            // Step 6: Calculate the checksum
+            const checksum = calculateChecksum(barcode);
 
-    // Final barcode with checksum
-    barcode += checksum;
+            // Final barcode with checksum
+            barcode += checksum;
 
-    // Display the result
-    document.getElementById("barcode").innerHTML = `Generated barcode: ${barcode}`;
+            // Display the result
+            document.getElementById("barcode").innerHTML = `Generated barcode: ${barcode}`;
 
-    // Generate the barcode image
-    JsBarcode("#barcodeCanvas", barcode, {
-        format: "EAN13",
-        displayValue: true,
-        fontSize: 18
-    });
-}
-
-function calculateChecksum(barcode) {
-    let sumOdd = 0;
-    let sumEven = 0;
-
-    // Loop through barcode characters (first 12 digits only)
-    for (let i = 0; i < barcode.length; i++) {
-        const digit = parseInt(barcode[i]);
-        if (i % 2 === 0) {
-            sumEven += digit; // Even position (index 0, 2, 4...)
-        } else {
-            sumOdd += digit * 3; // Odd position (index 1, 3, 5...)
+            // Show the barcode in the full-screen pop-up
+            showPopupBarcode(barcode);
         }
-    }
 
-    // Sum the even and odd positions
-    const total = sumEven + sumOdd;
+        function calculateChecksum(barcode) {
+            let sumOdd = 0;
+            let sumEven = 0;
 
-    // Modulo 10 and subtract from 10 to get the checksum
-    const checksum = (10 - (total % 10)) % 10;
+                       // Loop through barcode characters (first 12 digits only)
+            for (let i = 0; i < barcode.length; i++) {
+                const digit = parseInt(barcode[i]);
+                if (i % 2 === 0) {
+                    sumEven += digit; // Even position (index 0, 2, 4...)
+                } else {
+                    sumOdd += digit * 3; // Odd position (index 1, 3, 5...)
+                }
+            }
 
-    return checksum;
-}
+            // Sum the even and odd positions
+            const total = sumEven + sumOdd;
+
+            // Modulo 10 and subtract from 10 to get the checksum
+            const checksum = (10 - (total % 10)) % 10;
+
+            return checksum;
+        }
+
+        // Function to display barcode in full-screen pop-up
+        function showPopupBarcode(barcode) {
+            const popup = document.getElementById('barcodePopup');
+            popup.style.display = 'flex'; // Show pop-up
+
+            // Generate the barcode in the pop-up canvas
+            JsBarcode("#popupBarcodeCanvas", barcode, {
+                format: "EAN13",
+                displayValue: true,
+                fontSize: 40, // Larger font for easier reading
+                background: "#ffffff", // White background
+                lineColor: "#000000", // Black lines for barcode
+                width: 2 // Line thickness for easier scanning
+            });
+        }
+
+        // Function to close the full-screen pop-up
+        function closePopup() {
+            const popup = document.getElementById('barcodePopup');
+            popup.style.display = 'none'; // Hide pop-up
+        }
     </script>
 </body>
 </html>
